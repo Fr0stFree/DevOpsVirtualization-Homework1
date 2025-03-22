@@ -1,0 +1,180 @@
+name: deployment
+
+on:
+  push:
+    branches: [master, main]
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        python-version: ["3.8", "3.9", "3.10"]
+
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v3
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+  
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip 
+          pip install flake8==7.1.1 flake8-isort==6.1.1
+      
+      - name: Run linters
+        run: python -m flake8 --extend-exclude .venv,migrations backend
+
+  build_and_push_backend:
+    runs-on: ubuntu-latest
+    needs: tests
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Login to Docker 
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+        
+      - name: Push image to DockerHub
+        uses: docker/build-push-action@v4
+        with:
+          context: ./backend/
+          push: true
+          tags: ${{ secrets.DOCKER_USERNAME }}/kittygram_backend:latest
+
+  build_and_push_frontend:
+    runs-on: ubuntu-latest
+    needs: tests
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Login to Docker 
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+        
+      - name: Push image to DockerHub
+        uses: docker/build-push-action@v4
+        with:
+          context: ./frontend/
+          push: true
+          tags: ${{ secrets.DOCKER_USERNAME }}/kittygram_frontend:latest
+
+  build_and_push_gateway:
+    runs-on: ubuntu-latest
+    needs: tests
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Login to Docker 
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Push image to DockerHub
+        uses: docker/build-push-action@v4
+        with:
+          context: ./nginx/
+          push: true
+          tags: ${{ secrets.DOCKER_USERNAME }}/kittygram_gateway:latest
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: 
+      - build_and_push_gateway
+      - build_and_push_backend
+      - build_and_push_frontend
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v3
+
+      - name: Deliver configuration files
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.PRODUCTION_HOST }}
+          username: ${{ secrets.PRODUCTION_USER }}
+          key: ${{ secrets.PRODUCTION_SSH_KEY }}
+          source: "docker-compose.production.yml"
+          target: "/home/${{ secrets.PRODUCTION_USER }}/kittygram"
+
+      - name: Pull and restart containers
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.PRODUCTION_HOST }}
+          username: ${{ secrets.PRODUCTION_USER }}
+          key: ${{ secrets.PRODUCTION_SSH_KEY }}
+          script: |
+            docker compose -f kittygram/docker-compose.production.yml pull
+            docker compose -f kittygram/docker-compose.production.yml down
+            docker compose -f kittygram/docker-compose.production.yml up -d
+
+  auto_tests:
+    runs-on: ubuntu-latest
+    needs: deploy
+    steps:
+    - name: Check out code
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip 
+        pip install -r ./backend/requirements.txt 
+
+    - name: Run tests
+      run: python -m pytest
+
+  notify_on_success:
+    runs-on: ubuntu-latest
+    needs: auto_tests
+    if: success()
+    steps:
+      - name: Notify on success
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_CHAT_ID }}
+          token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          message: |
+            Project ${{ github.repository }} was successfully deployed
+            Created by: ${{ github.actor }}
+            Commit: ${{ github.event.commits[0].message }}
+            Link: https://github.com/${{ github.repository }}/commit/${{ github.sha }}
+
+  notify_on_failure:
+    runs-on: ubuntu-latest
+    if: failure()
+    steps:
+      - name: Notify on failure
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_CHAT_ID }}
+          token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          message: |
+            Project ${{ github.repository }} failed to deploy
+            Created by: ${{ github.actor }}
+            Commit: ${{ github.event.commits[0].message }}
+            Link: https://github.com/${{ github.repository }}/commit/${{ github.sha }}

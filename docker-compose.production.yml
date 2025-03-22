@@ -1,0 +1,61 @@
+name: 'kittygram'
+
+services:
+  kittygram_gateway:
+    image: frostfree/kittygram_gateway:latest
+    container_name: gateway
+    ports:
+      - '80:80/tcp'
+    restart: always
+    depends_on:
+      - kittygram_backend
+      - kittygram_frontend
+    networks:
+      - kittygram-network
+    volumes:
+      - backend-static:/var/html/backend
+      - media:/var/html/media
+      - frontend-static:/var/html/static
+
+  kittygram_backend:
+    image: frostfree/kittygram_backend:latest
+    container_name: backend
+    restart: always
+    env_file: .env
+    networks:
+      - kittygram-network
+    volumes:
+      - backend-static:/app/collected_static
+      - media:/app/media
+    depends_on:
+      - postgres
+    
+  kittygram_frontend:
+    image: frostfree/kittygram_frontend:latest
+    container_name: frontend
+    restart: always
+    networks:
+      - kittygram-network
+    volumes:
+      - frontend-static:/app/build
+    
+  postgres:
+    image: postgres:13
+    container_name: postgres
+    restart: always
+    env_file: .env
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    networks:
+      - kittygram-network
+
+networks:
+  kittygram-network:
+    driver: bridge
+  
+volumes:
+  pg_data:
+  backend-static:
+  media:
+  frontend-static:
+  
