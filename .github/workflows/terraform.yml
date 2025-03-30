@@ -33,7 +33,7 @@ jobs:
       - name: Create YC SA key file
         run: |
           mkdir -p ~/.config/yandex
-          echo '${{ secrets.YC_SA_JSON_CREDENTIALS }}' > $TF_VAR_yandex_srv_account_key_file
+          echo '${{ secrets.YC_SA_JSON_CREDENTIALS }}' > ~/.config/yandex/key.json
 
       - name: Terraform Init
         working-directory: ./infra
