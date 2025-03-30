@@ -16,6 +16,12 @@ on:
 jobs:
   terraform:
     runs-on: ubuntu-latest
+    env:
+      ACCESS_KEY: ${{ secrets.ACCESS_KEY }}
+      SECRET_KEY: ${{ secrets.SECRET_KEY }}
+      TF_VAR_yandex_cloud_id: ${{ secrets.YC_CLOUD_ID }}
+      TF_VAR_yandex_folder_id: ${{ secrets.YC_FOLDER_ID }}
+      TF_VAR_yandex_srv_account_key_file: ~/.config/yandex/key.json
 
     steps:
       - name: Checkout repository
@@ -24,51 +30,30 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v1
 
-      - name: Login to Yandex Cloud Container Registry
-        uses: yc-actions/yc-cr-login@v2
-        with:
-          yc-sa-json-credentials: ${{ secrets.YC_SA_JSON_CREDENTIALS }}
+      - name: Validate Terraform configuration
+        run: terraform validate
+        working-directory: ./infra
+
+      - name: Create YC SA key file
+        run: |
+          mkdir -p ~/.config/yandex
+          echo '${{ secrets.YC_SA_JSON_CREDENTIALS }}' > $TF_VAR_yandex_srv_account_key_file
 
       - name: Terraform Init
         working-directory: ./infra
         run: terraform init -backend-config="access_key=$ACCESS_KEY" -backend-config="secret_key=$SECRET_KEY"
-        env:
-          ACCESS_KEY: ${{ secrets.ACCESS_KEY }}
-          SECRET_KEY: ${{ secrets.SECRET_KEY }}
-          TF_VAR_yandex_cloud_id: ${{ secrets.YC_CLOUD_ID }}
-          TF_VAR_yandex_folder_id: ${{ secrets.YC_FOLDER_ID }}
-          TF_VAR_yandex_srv_account_key_file: ${{ secrets.YC_SA_JSON_CREDENTIALS }}
 
       - name: Terraform Plan
         if: github.event.inputs.action == 'plan'
         working-directory: ./infra
         run: terraform plan
-        env:
-          ACCESS_KEY: ${{ secrets.ACCESS_KEY }}
-          SECRET_KEY: ${{ secrets.SECRET_KEY }}
-          TF_VAR_yandex_cloud_id: ${{ secrets.YC_CLOUD_ID }}
-          TF_VAR_yandex_folder_id: ${{ secrets.YC_FOLDER_ID }}
-          TF_VAR_yandex_srv_account_key_file: ${{ secrets.YC_SA_JSON_CREDENTIALS }}
 
       - name: Terraform Apply
         if: github.event.inputs.action == 'apply'
         working-directory: ./infra
         run: terraform apply -auto-approve
-        env:
-          ACCESS_KEY: ${{ secrets.ACCESS_KEY }}
-          SECRET_KEY: ${{ secrets.SECRET_KEY }}
-          TF_VAR_yandex_cloud_id: ${{ secrets.YC_CLOUD_ID }}
-          TF_VAR_yandex_folder_id: ${{ secrets.YC_FOLDER_ID }}
-          TF_VAR_yandex_srv_account_key_file: ${{ secrets.YC_SA_JSON_CREDENTIALS }}
 
       - name: Terraform Destroy
         if: github.event.inputs.action == 'destroy'
         working-directory: ./infra
         run: terraform destroy -auto-approve
-        env:
-          ACCESS_KEY: ${{ secrets.ACCESS_KEY }}
-          SECRET_KEY: ${{ secrets.SECRET_KEY }}
-          TF_VAR_yandex_cloud_id: ${{ secrets.YC_CLOUD_ID }}
-          TF_VAR_yandex_folder_id: ${{ secrets.YC_FOLDER_ID }}
-          TF_VAR_yandex_srv_account_key_file: ${{ secrets.YC_SA_JSON_CREDENTIALS }}
-
