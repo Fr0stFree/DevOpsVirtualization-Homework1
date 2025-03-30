@@ -24,10 +24,10 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v1
 
-      - name: Setup Yandex Cloud
-        uses: yc-actions/yc-cr-login@v1
+      - name: Login to Yandex Cloud Container Registry
+        uses: yc-actions/yc-cr-login@v2
         with:
-          yc-sa-json-credentials: ${{ secrets.YC_SA_JSON }}
+          yc-sa-json-credentials: ${{ secrets.YC_SA_JSON_CREDENTIALS }}
 
       - name: Terraform Init
         working-directory: ./infra
