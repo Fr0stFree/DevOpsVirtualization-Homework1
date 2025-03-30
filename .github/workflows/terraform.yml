@@ -35,8 +35,9 @@ jobs:
         env:
           ACCESS_KEY: ${{ secrets.ACCESS_KEY }}
           SECRET_KEY: ${{ secrets.SECRET_KEY }}
-          TF_VAR_cloud_id: ${{ secrets.YC_CLOUD_ID }}
-          TF_VAR_folder_id: ${{ secrets.YC_FOLDER_ID }}
+          TF_VAR_yandex_cloud_id: ${{ secrets.YC_CLOUD_ID }}
+          TF_VAR_yandex_folder_id: ${{ secrets.YC_FOLDER_ID }}
+          TF_VAR_yandex_srv_account_key_file: ${{ secrets.YC_SA_JSON_CREDENTIALS }}
 
       - name: Terraform Plan
         if: github.event.inputs.action == 'plan'
@@ -45,9 +46,9 @@ jobs:
         env:
           ACCESS_KEY: ${{ secrets.ACCESS_KEY }}
           SECRET_KEY: ${{ secrets.SECRET_KEY }}
-          TF_VAR_cloud_id: ${{ secrets.YC_CLOUD_ID }}
-          TF_VAR_folder_id: ${{ secrets.YC_FOLDER_ID }}
-
+          TF_VAR_yandex_cloud_id: ${{ secrets.YC_CLOUD_ID }}
+          TF_VAR_yandex_folder_id: ${{ secrets.YC_FOLDER_ID }}
+          TF_VAR_yandex_srv_account_key_file: ${{ secrets.YC_SA_JSON_CREDENTIALS }}
 
       - name: Terraform Apply
         if: github.event.inputs.action == 'apply'
@@ -56,8 +57,9 @@ jobs:
         env:
           ACCESS_KEY: ${{ secrets.ACCESS_KEY }}
           SECRET_KEY: ${{ secrets.SECRET_KEY }}
-          TF_VAR_cloud_id: ${{ secrets.YC_CLOUD_ID }}
-          TF_VAR_folder_id: ${{ secrets.YC_FOLDER_ID }}
+          TF_VAR_yandex_cloud_id: ${{ secrets.YC_CLOUD_ID }}
+          TF_VAR_yandex_folder_id: ${{ secrets.YC_FOLDER_ID }}
+          TF_VAR_yandex_srv_account_key_file: ${{ secrets.YC_SA_JSON_CREDENTIALS }}
 
       - name: Terraform Destroy
         if: github.event.inputs.action == 'destroy'
@@ -66,5 +68,7 @@ jobs:
         env:
           ACCESS_KEY: ${{ secrets.ACCESS_KEY }}
           SECRET_KEY: ${{ secrets.SECRET_KEY }}
-          TF_VAR_cloud_id: ${{ secrets.YC_CLOUD_ID }}
-          TF_VAR_folder_id: ${{ secrets.YC_FOLDER_ID }}
+          TF_VAR_yandex_cloud_id: ${{ secrets.YC_CLOUD_ID }}
+          TF_VAR_yandex_folder_id: ${{ secrets.YC_FOLDER_ID }}
+          TF_VAR_yandex_srv_account_key_file: ${{ secrets.YC_SA_JSON_CREDENTIALS }}
+
