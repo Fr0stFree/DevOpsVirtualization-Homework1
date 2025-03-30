@@ -30,10 +30,6 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v1
 
-      - name: Validate Terraform configuration
-        run: terraform validate
-        working-directory: ./infra
-
       - name: Create YC SA key file
         run: |
           mkdir -p ~/.config/yandex
@@ -42,6 +38,10 @@ jobs:
       - name: Terraform Init
         working-directory: ./infra
         run: terraform init -backend-config="access_key=$ACCESS_KEY" -backend-config="secret_key=$SECRET_KEY"
+
+      - name: Validate Terraform configuration
+        run: terraform validate
+        working-directory: ./infra
 
       - name: Terraform Plan
         if: github.event.inputs.action == 'plan'
