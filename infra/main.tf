@@ -1,42 +1,3 @@
-terraform {
-  required_providers {
-    yandex = {
-      source = "yandex-cloud/yandex"
-    }
-  }
-  required_version = ">= 0.13"
-
-  backend "s3" {
-    endpoints = {
-      s3 = "https://storage.yandexcloud.net"
-    }
-    bucket = "state-bucket-a"
-    region = "ru-central1-a"
-    key    = "terraform.tfstate"
-
-    skip_region_validation      = true
-    skip_credentials_validation = true
-    skip_requesting_account_id  = true
-    skip_s3_checksum            = true
-  }
-}
-
-variable "zone" {
-  type        = string
-  description = "The zone to deploy resources in"
-  default     = "ru-central1-a"
-}
-
-variable "boot-disk-size" {
-  type        = number
-  description = "Size of the bootstrap disk in Gb"
-  default     = 20
-}
-
-provider "yandex" {
-  zone = var.zone
-}
-
 resource "yandex_vpc_network" "kittygram-network" {
   name = "kittygram-network"
 }
@@ -52,6 +13,7 @@ resource "yandex_vpc_security_group" "kittygram-security-group" {
   name        = "kittygram-security-group"
   description = "Default security group for kittygram site"
   network_id  = yandex_vpc_network.kittygram-network.id
+
   egress {
     description    = "Allow all outgoing traffic"
     protocol       = "ANY"
@@ -77,12 +39,18 @@ resource "yandex_compute_disk" "kittygram-boot-disk" {
   name = "kittygram-boot-disk"
   type = "network-hdd"
   zone = var.zone
-  size = var.boot-disk-size
+  size = 20
+}
+
+resource "tls_private_key" "kittygram_vm_ssh_key" {
+  algorithm = "RSA"
+  rsa_bits  = 4096
 }
 
 resource "yandex_compute_instance" "kittygram-vm" {
   name        = "kittygram-vm"
   platform_id = "standard-v3"
+
   resources {
     cores         = 2
     memory        = 2
@@ -92,8 +60,11 @@ resource "yandex_compute_instance" "kittygram-vm" {
     disk_id = yandex_compute_disk.kittygram-boot-disk.id
   }
   network_interface {
-    subnet_id = yandex_vpc_subnet.kittygram-subnet.id
-    nat       = true
-    security_group_ids = [ yandex_vpc_security_group.kittygram-security-group.id ]
+    subnet_id          = yandex_vpc_subnet.kittygram-subnet.id
+    nat                = true
+    security_group_ids = [yandex_vpc_security_group.kittygram-security-group.id]
+  }
+  metadata = {
+    ssh-keys = "ubuntu:${tls_private_key.kittygram_vm_ssh_key.public_key_openssh}"
   }
 }
