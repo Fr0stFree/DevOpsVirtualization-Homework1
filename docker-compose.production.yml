@@ -58,4 +58,3 @@ volumes:
   backend-static:
   media:
   frontend-static:
-  
