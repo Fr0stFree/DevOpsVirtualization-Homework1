@@ -127,8 +127,8 @@ jobs:
           host: ${{ env.VM_IP }}
           username: ubuntu
           key: private_key.pem
-          source: "docker-compose.production.yml"
-          target: "/home/ubuntu/kittygram"
+          source: docker-compose.production.yml
+          target: /home/ubuntu/kittygram
 
       - name: Pull and restart containers
         uses: appleboy/ssh-action@master
@@ -181,6 +181,13 @@ jobs:
   notify_on_failure:
     runs-on: ubuntu-latest
     if: failure()
+    needs: 
+      - deploy
+      - auto_tests
+      - build_and_push_backend
+      - build_and_push_frontend
+      - build_and_push_gateway
+      - tests
     steps:
       - name: Notify on failure
         uses: appleboy/telegram-action@master
