@@ -5,6 +5,6 @@ output "external_ip" {
 
 output "ssh_private_key" {
   description = "SSH private key for the VM"
-  value       = tls_private_key.kittygram_vm_ssh_key.private_key_pem
+  value       = tls_private_key.kittygram_ssh_key.private_key_pem
   sensitive   = true
 }
