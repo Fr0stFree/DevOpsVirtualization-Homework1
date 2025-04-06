@@ -40,12 +40,6 @@ resource "tls_private_key" "kittygram_ssh_key" {
   rsa_bits  = 4096
 }
 
-resource "local_file" "private_key" {
-  filename        = "${path.module}/kittygram_ssh_key.pem"
-  content         = tls_private_key.kittygram_ssh_key.private_key_openssh
-  file_permission = "0600"
-}
-
 resource "yandex_compute_disk" "kittygram-boot-disk" {
   image_id = "fd8vmcue7aajpmeo39kk" # ubuntu 20-04
   name     = "kittygram-boot-disk"
