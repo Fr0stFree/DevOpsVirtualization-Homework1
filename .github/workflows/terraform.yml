@@ -12,6 +12,7 @@ on:
           - plan
           - apply
           - destroy
+          - output
 
 jobs:
   terraform:
@@ -53,16 +54,16 @@ jobs:
         working-directory: ./infra
         run: terraform apply -auto-approve
 
-      - name: Save Terraform output to file
-        if: github.event.inputs.action == 'apply'
+      - name: Terraform Output
+        if: github.event.inputs.action == 'output'
         working-directory: ./infra
         run: terraform output -json > terraform-output.json
       
       - name: Upload Terraform output
-        if: github.event.inputs.action == 'apply'
+        if: github.event.inputs.action == 'output'
         uses: actions/upload-artifact@v4
         with:
-          name: terraform-output
+          name: terraform-output.json
           path: infra/terraform-output.json
 
       - name: Terraform Destroy
