@@ -3,3 +3,4 @@
 .vscode/
 .terraform*
 .env
+*.pem
