@@ -57,7 +57,7 @@ jobs:
       - name: Terraform Output
         if: github.event.inputs.action == 'output'
         working-directory: ./infra
-        run: terraform output -json > terraform-output.json
+        run: terraform output -json | jq > terraform-output.json
       
       - name: Upload Terraform output
         if: github.event.inputs.action == 'output'
