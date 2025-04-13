@@ -17,3 +17,8 @@ variable "yandex_folder_id" {
 variable "yandex_srv_account_key_file" {
   type = string
 }
+
+variable "vm_ssh_public_key" {
+  type      = string
+  sensitive = true
+}

@@ -23,6 +23,7 @@ jobs:
       TF_VAR_yandex_cloud_id: ${{ secrets.YC_CLOUD_ID }}
       TF_VAR_yandex_folder_id: ${{ secrets.YC_FOLDER_ID }}
       TF_VAR_yandex_srv_account_key_file: /home/runner/.config/yandex/key.json
+      TF_VAR_vm_ssh_public_key: ${{ secrets.PRODUCTION_HOST_SSH_PUBLIC_KEY }}
 
     steps:
       - name: Checkout repository
@@ -38,7 +39,7 @@ jobs:
 
       - name: Terraform Init
         working-directory: ./infra
-        run: terraform init -backend-config="access_key=$ACCESS_KEY" -backend-config="secret_key=$SECRET_KEY"
+        run: terraform init
 
       - name: Validate Terraform configuration
         run: terraform validate
@@ -53,18 +54,6 @@ jobs:
         if: github.event.inputs.action == 'apply'
         working-directory: ./infra
         run: terraform apply -auto-approve
-
-      - name: Terraform Output
-        if: github.event.inputs.action == 'output'
-        working-directory: ./infra
-        run: terraform output -json | jq > terraform-output.json
-      
-      - name: Upload Terraform output
-        if: github.event.inputs.action == 'output'
-        uses: actions/upload-artifact@v4
-        with:
-          name: terraform-output.json
-          path: infra/terraform-output.json
 
       - name: Terraform Destroy
         if: github.event.inputs.action == 'destroy'

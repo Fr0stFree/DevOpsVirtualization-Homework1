@@ -2,6 +2,16 @@ resource "yandex_vpc_network" "kittygram-network" {
   name = "kittygram-network"
 }
 
+resource "yandex_vpc_address" "kittygram-static-ip" {
+  name = "kittygram-static-ip"
+  external_ipv4_address {
+    zone_id = var.zone
+  }
+  lifecycle {
+    prevent_destroy = true
+  }
+}
+
 resource "yandex_vpc_subnet" "kittygram-subnet" {
   name           = "kittygram-subnet"
   zone           = var.zone
@@ -51,7 +61,6 @@ resource "yandex_compute_disk" "kittygram-boot-disk" {
 resource "yandex_compute_instance" "kittygram-vm" {
   name        = "kittygram-vm"
   platform_id = "standard-v3"
-
   resources {
     cores         = 2
     memory        = 2
@@ -61,12 +70,13 @@ resource "yandex_compute_instance" "kittygram-vm" {
     disk_id = yandex_compute_disk.kittygram-boot-disk.id
   }
   network_interface {
+    nat_ip_address     = yandex_vpc_address.kittygram-static-ip.external_ipv4_address[0].address
     subnet_id          = yandex_vpc_subnet.kittygram-subnet.id
     nat                = true
     security_group_ids = [yandex_vpc_security_group.kittygram-security-group.id]
   }
   metadata = {
-    ssh-keys  = "ubuntu:${tls_private_key.kittygram_ssh_key.public_key_openssh}"
+    ssh-keys  = "ubuntu:${var.vm_ssh_public_key}"
     user-data = <<-EOF
       datasource:
         Ec2:
@@ -77,7 +87,7 @@ resource "yandex_compute_instance" "kittygram-vm" {
         sudo: "ALL=(ALL) NOPASSWD:ALL"
         shell: /bin/bash
         ssh_authorized_keys:
-        - ${tls_private_key.kittygram_ssh_key.public_key_openssh}
+        - ${var.vm_ssh_public_key}
       write_files:
         - path: "/usr/local/etc/docker-start.sh"
           permissions: "755"

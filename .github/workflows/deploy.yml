@@ -105,38 +105,24 @@ jobs:
       - build_and_push_frontend
 
     steps:
-      - name: Download Terraform output artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: terraform-output
-          path: ./infra-output
-
-      - name: Extract Terraform output
-        id: extract
-        run: |
-          IP=$(jq -r '.external_ip.value' infra-output/terraform-output.json)
-          echo "VM_IP=$IP" >> $GITHUB_ENV
-
-          KEY=$(jq -r '.ssh_private_key.value' infra-output/terraform-output.json)
-          echo "$KEY" > private_key.pem
-          chmod 600 private_key.pem
+      - name: Check out the repo
+        uses: actions/checkout@v3
 
       - name: Deliver configuration files
         uses: appleboy/scp-action@master
         with:
-          host: ${{ env.VM_IP }}
-          username: ubuntu
-          key: private_key.pem
-          source: docker-compose.production.yml
-          target: /home/ubuntu/kittygram
+          host: ${{ secrets.PRODUCTION_HOST_ADDR }}
+          username: ${{ secrets.PRODUCTION_HOST_LOGIN }}
+          key: ${{ PRODUCTION_HOST_SSH_PRIVATE_KEY }}
+          source: "docker-compose.production.yml"
+          target: "/home/${{ secrets.PRODUCTION_HOST_LOGIN }}/kittygram"
 
       - name: Pull and restart containers
         uses: appleboy/ssh-action@master
         with:
-          host: ${{ env.VM_IP }}
-          username: ubuntu
-          port: 22
-          key: private_key.pem
+          host: ${{ secrets.PRODUCTION_HOST_ADDR }}
+          username: ${{ secrets.PRODUCTION_HOST_LOGIN }}
+          key: ${{ PRODUCTION_HOST_SSH_PRIVATE_KEY }}
           script: |
             docker-compose -f kittygram/docker-compose.production.yml pull
             docker-compose -f kittygram/docker-compose.production.yml down
