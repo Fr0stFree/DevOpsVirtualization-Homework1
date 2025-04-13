@@ -113,7 +113,7 @@ jobs:
         with:
           host: ${{ secrets.PRODUCTION_HOST_ADDR }}
           username: ${{ secrets.PRODUCTION_HOST_LOGIN }}
-          key: ${{ PRODUCTION_HOST_SSH_PRIVATE_KEY }}
+          key: ${{ secrets.PRODUCTION_HOST_SSH_PRIVATE_KEY }}
           source: "docker-compose.production.yml"
           target: "/home/${{ secrets.PRODUCTION_HOST_LOGIN }}/kittygram"
 
@@ -122,7 +122,7 @@ jobs:
         with:
           host: ${{ secrets.PRODUCTION_HOST_ADDR }}
           username: ${{ secrets.PRODUCTION_HOST_LOGIN }}
-          key: ${{ PRODUCTION_HOST_SSH_PRIVATE_KEY }}
+          key: ${{ secrets.PRODUCTION_HOST_SSH_PRIVATE_KEY }}
           script: |
             docker-compose -f kittygram/docker-compose.production.yml pull
             docker-compose -f kittygram/docker-compose.production.yml down
