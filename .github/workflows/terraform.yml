@@ -12,7 +12,6 @@ on:
           - plan
           - apply
           - destroy
-          - output
 
 jobs:
   terraform:
@@ -39,7 +38,7 @@ jobs:
 
       - name: Terraform Init
         working-directory: ./infra
-        run: terraform init
+        run: terraform init -backend-config="access_key=$ACCESS_KEY" -backend-config="secret_key=$SECRET_KEY"
 
       - name: Validate Terraform configuration
         run: terraform validate
