@@ -95,12 +95,23 @@ resource "yandex_compute_instance" "kittygram-vm" {
           content: |
             #!/bin/bash
 
-            # Docker
+            set -e
+
             echo "Installing Docker"
-            sudo apt update -y && sudo apt install docker.io -y
+            sudo apt update -y && sudo apt install -y docker.io curl
+
             echo "Grant user access to Docker"
             sudo usermod -aG docker ubuntu
-            newgrp docker
+
+            echo "Installing Docker Compose"
+            DOCKER_COMPOSE_VERSION="v2.27.0"
+            ARCH=$(uname -m)
+            curl -SL "https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-linux-${ARCH}" -o /tmp/docker-compose
+            sudo mv /tmp/docker-compose /usr/local/bin/docker-compose
+            sudo chmod +x /usr/local/bin/docker-compose
+
+            echo "Docker Compose version:"
+            docker-compose version
 
           defer: true
         - path: "/usr/local/etc/docker-main.sh"
