@@ -78,6 +78,7 @@ resource "yandex_compute_instance" "kittygram-vm" {
   metadata = {
     ssh-keys  = "ubuntu:${var.vm_ssh_public_key}"
     user-data = <<-EOF
+      #cloud-config
       datasource:
         Ec2:
           strict_id: false
