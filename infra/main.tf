@@ -104,9 +104,7 @@ resource "yandex_compute_instance" "kittygram-vm" {
             sudo usermod -aG docker ubuntu
 
             echo "Installing Docker Compose"
-            DOCKER_COMPOSE_VERSION="v2.27.0"
-            ARCH=$(uname -m)
-            curl -SL "https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-linux-${ARCH}" -o /tmp/docker-compose
+            curl -SL "https://github.com/docker/compose/releases/download/v2.27.0/docker-compose-linux-$(uname -m)" -o /tmp/docker-compose
             sudo mv /tmp/docker-compose /usr/local/bin/docker-compose
             sudo chmod +x /usr/local/bin/docker-compose
 
