@@ -19,6 +19,7 @@
 
 ## ⚙️ Структура проекта
 
+```
 ├── README.md  
 ├── .github
 │   └── workflows
@@ -57,6 +58,7 @@
 │   ├── test_dockerhub_images.py
 │   └── test_files.py
 └── tests.yml
+```
 
 ## Необходимые секреты
 
@@ -88,15 +90,14 @@
 
 ### Инфраструктура `terraform.yml`
 
-1.	Открой GitHub Actions → Terraform
-2.	Нажми Run workflow → выбери действие:
+Запускается через GitHub Actions → Terraform. Необходимо перейти в  Run workflow → выбрать действие:
  - plan — просмотр изменений
  - apply — создать ресурсы
  - destroy — удалить ресурсы
 
 После успешного apply у тебя появится виртуальная машина с Docker и docker-compose из cloud-init.
 
-## CI/CD `deploy.yml`
+### CI/CD `deploy.yml`
 
 Пайплайн автоматически запускается при пуше в ветку main/master
 
