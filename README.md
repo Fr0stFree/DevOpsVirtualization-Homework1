@@ -49,6 +49,7 @@
 │   ├── Dockerfile
 │   └── nginx.conf
 ├── pytest.ini
+├── .env                            # Файл окружения для локального запуска приложения. Смотри .env.example
 ├── tests
 │   ├── __init__.py
 │   ├── conftest.py
@@ -92,10 +93,12 @@
 Пайплайн автоматически запускается при пуше в ветку main/master
 
 Stages
-- Сборку образов frontend и backend
-- Тестирование образов frontend и backend
-- Копирование архива на ВМ (scp)
-- Распаковку и запуск через docker-compose
+- Сборку образов frontend, backend и nginx
+- Тестирование образов frontend, backend и nginx
+- Публикацию образов на DockerHub
+- Подключение к удалённой ВМ
+- Запуск контейнеров с помощью docker-compose.production.yml
+- Проверку доступности приложения
 - Отправку уведомления в Telegram
 
 ## Примечание

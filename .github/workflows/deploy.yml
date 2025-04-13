@@ -108,7 +108,7 @@ jobs:
       - name: Check out the repo
         uses: actions/checkout@v3
 
-      - name: Deliver configuration files
+      - name: Deliver compose file to production
         uses: appleboy/scp-action@master
         with:
           host: ${{ secrets.PRODUCTION_HOST_ADDR }}
@@ -116,6 +116,25 @@ jobs:
           key: ${{ secrets.PRODUCTION_HOST_SSH_PRIVATE_KEY }}
           source: "docker-compose.production.yml"
           target: "/home/${{ secrets.PRODUCTION_HOST_LOGIN }}/kittygram"
+
+      - name: Setup environment variables
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.PRODUCTION_HOST_ADDR }}
+          username: ${{ secrets.PRODUCTION_HOST_LOGIN }}
+          key: ${{ secrets.PRODUCTION_HOST_SSH_PRIVATE_KEY }}
+          script: |
+            cat > /home/${{ secrets.PRODUCTION_HOST_LOGIN }}/kittygram/.env <<EOF
+              POSTGRES_USER=${{ secrets.POSTGRES_USER }}
+              POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
+              POSTGRES_DB=${{ secrets.POSTGRES_DB }}
+              POSTGRES_HOST=${{ secrets.POSTGRES_HOST }}
+              POSTGRES_PORT=${{ secrets.POSTGRES_PORT }}
+              SECRET_KEY=${{ secrets.SECRET_KEY }}
+              ALLOWED_HOSTS=${{ secrets.ALLOWED_HOSTS }}
+              DEBUG=${{ secrets.DEBUG }}
+            EOF
+            chmod 600 /home/${{ secrets.PRODUCTION_HOST_LOGIN }}/kittygram/.env
 
       - name: Pull and restart containers
         uses: appleboy/ssh-action@master
